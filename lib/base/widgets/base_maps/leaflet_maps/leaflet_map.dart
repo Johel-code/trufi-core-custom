@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import 'package:latlong2/latlong.dart';
 
 import 'package:trufi_core/base/blocs/map_layer/map_layers_cubit.dart';
 import 'package:trufi_core/base/blocs/map_configuration/map_configuration_cubit.dart';
 import 'package:trufi_core/base/blocs/map_tile_provider/map_tile_provider_cubit.dart';
 import 'package:trufi_core/base/blocs/providers/gps_location_provider.dart';
 import 'package:trufi_core/base/models/trufi_latlng.dart';
+import 'package:trufi_core/base/models/trufi_place.dart';
+import 'package:trufi_core/base/pages/saved_places/search_locations_cubit/search_locations_cubit.dart';
 import 'package:trufi_core/base/translations/trufi_base_localizations.dart';
+import 'package:trufi_core/base/utils/util_icons/icons.dart';
 import 'package:trufi_core/base/widgets/base_maps/leaflet_maps/decoder_data.dart';
 import 'package:trufi_core/base/widgets/base_maps/leaflet_maps/leaflet_map_controller.dart';
 import 'package:trufi_core/base/widgets/base_maps/leaflet_maps/utils/leaflet_map_utils.dart';
@@ -53,6 +57,7 @@ class _LeafletMapState extends State<LeafletMap> {
     final mapConfiguratiom = context.read<MapConfigurationCubit>().state;
     final currentMapType = context.watch<MapTileProviderCubit>().state;
     final customLayersCubit = context.watch<MapLayersCubit>();
+    final searchLocationsCubit = context.watch<SearchLocationsCubit>();
     final showCustomLayers =
         widget.showPOILayers && customLayersCubit.layersContainer.isNotEmpty;
     int? clusterSize;
@@ -164,6 +169,11 @@ class _LeafletMapState extends State<LeafletMap> {
                     mapConfiguratiom.markersConfiguration.yourLocationMarker,
                   )
                 ]),
+                _markerInMap(places: [
+                  ...searchLocationsCubit.state.myDefaultPlaces
+                      .where((element) => element.isLatLngDefined),
+                  ...searchLocationsCubit.state.myPlaces
+                ])
               ],
             );
           },
@@ -205,6 +215,25 @@ class _LeafletMapState extends State<LeafletMap> {
               SafeArea(child: mapConfiguratiom.mapAttributionBuilder!(context)),
         ),
       ],
+    );
+  }
+}
+
+class _markerInMap extends StatelessWidget {
+  final List<TrufiLocation> places;
+
+  const _markerInMap({required this.places});
+
+  @override
+  Widget build(BuildContext context) {
+    return MarkerLayer(
+      markers: places.map((location) {
+        return Marker(
+            point: LatLng(location.latitude, location.longitude),
+            width: 30,
+            height: 30,
+            child: typeToIconData(location.type, color: Colors.blue));
+      }).toList(),
     );
   }
 }
