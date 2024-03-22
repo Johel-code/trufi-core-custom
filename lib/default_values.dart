@@ -84,7 +84,7 @@ abstract class DefaultValues {
         create: (context) => MapConfigurationCubit(mapConfiguration),
       ),
       BlocProvider<MapLayersCubit>(
-        create: (context) => MapLayersCubit([]),
+        create: (context) => MapLayersCubit(layersContainer ?? []),
       ),
       BlocProvider<PanelCubit>(
         create: (context) => PanelCubit(),
