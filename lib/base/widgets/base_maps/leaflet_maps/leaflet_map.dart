@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:trufi_core/base/blocs/map_layer/map_layers_cubit.dart';
 import 'package:trufi_core/base/blocs/map_configuration/map_configuration_cubit.dart';
 import 'package:trufi_core/base/blocs/map_tile_provider/map_tile_provider_cubit.dart';
+import 'package:trufi_core/base/blocs/panel/panel_cubit.dart';
 import 'package:trufi_core/base/blocs/providers/gps_location_provider.dart';
 import 'package:trufi_core/base/models/trufi_latlng.dart';
 import 'package:trufi_core/base/models/trufi_place.dart';
@@ -15,6 +16,7 @@ import 'package:trufi_core/base/translations/trufi_base_localizations.dart';
 import 'package:trufi_core/base/utils/util_icons/icons.dart';
 import 'package:trufi_core/base/widgets/base_maps/leaflet_maps/decoder_data.dart';
 import 'package:trufi_core/base/widgets/base_maps/leaflet_maps/leaflet_map_controller.dart';
+import 'package:trufi_core/base/widgets/base_maps/leaflet_maps/poi_marker_modal.dart';
 import 'package:trufi_core/base/widgets/base_maps/leaflet_maps/utils/leaflet_map_utils.dart';
 import 'package:trufi_core/base/widgets/base_maps/map_buttons/map_type_button.dart';
 import 'package:trufi_core/base/widgets/base_maps/map_buttons/your_location_button.dart';
@@ -161,6 +163,11 @@ class _LeafletMapState extends State<LeafletMap> {
                   )
                 else
                   ...widget.layerOptionsBuilder(context),
+                _markerInMap(places: [
+                  ...searchLocationsCubit.state.myDefaultPlaces
+                      .where((element) => element.isLatLngDefined),
+                  ...searchLocationsCubit.state.myPlaces
+                ]),
                 if (widget.layerOptionsBuilderTop != null)
                   ...widget.layerOptionsBuilderTop!(context),
                 MarkerLayer(markers: [
@@ -169,11 +176,6 @@ class _LeafletMapState extends State<LeafletMap> {
                     mapConfiguratiom.markersConfiguration.yourLocationMarker,
                   )
                 ]),
-                _markerInMap(places: [
-                  ...searchLocationsCubit.state.myDefaultPlaces
-                      .where((element) => element.isLatLngDefined),
-                  ...searchLocationsCubit.state.myPlaces
-                ])
               ],
             );
           },
@@ -229,10 +231,44 @@ class _markerInMap extends StatelessWidget {
     return MarkerLayer(
       markers: places.map((location) {
         return Marker(
-            point: LatLng(location.latitude, location.longitude),
-            width: 30,
-            height: 30,
-            child: typeToIconData(location.type, color: Colors.blue));
+          point: LatLng(location.latitude, location.longitude),
+          width: 20,
+          height: 20,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.purple,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white,
+                width: 1,
+              ),
+            ),
+            padding: EdgeInsets.all(2),
+            child: GestureDetector(
+              onTap: () {
+                final panelCubit = context.read<PanelCubit>();
+                panelCubit.setPanel(
+                  MarkerPanel(
+                    panel: (
+                      context,
+                      onFetchPlan, {
+                      isOnlyDestination,
+                    }) =>
+                        POIMarkerModal(
+                      location: location,
+                      onFetchPlan: onFetchPlan,
+                    ),
+                    positon: location.latLng,
+                    minSize: 120,
+                  ),
+                );
+              },
+              child: FittedBox(
+                child: typeToIconData(location.type, color: Colors.white),
+              ),
+            ),
+          ),
+        );
       }).toList(),
     );
   }
