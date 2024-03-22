@@ -9,6 +9,7 @@ import 'package:trufi_core/base/widgets/screen/lifecycle_reactor_notification.da
 import 'package:trufi_core/default_values.dart';
 import 'package:trufi_core/trufi_core.dart';
 import 'package:trufi_core/trufi_router.dart';
+import 'package:trufi_core_example/local_poi_layer/static_layer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +28,7 @@ void main() async {
           ),
           searchAssetPath: "assets/data/search.json",
           photonUrl: "https://navigator.trufi.app/photon",
+          layersContainer: customLayersTrufi,
         ),
       ],
       trufiRouter: TrufiRouter(
